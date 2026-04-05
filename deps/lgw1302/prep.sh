@@ -30,9 +30,15 @@ set -e
 cd $(dirname $0)
 
 lgwversion="V${lgwversion:-2.1.0}"
+# Using brocaar's fork for compatibility with SX1302 without temperature sensors
+# Verified working as of 587f4c28ecab91a96e65ac3b2686101a2b768727 
+lgwrepo="${lgwrepo:-https://github.com/brocaar/sx1302_hal.git}"
+lgwref="${lgwref:-master}"
 
 if [[ ! -d git-repo ]]; then
-    git clone https://github.com/Lora-net/sx1302_hal.git git-repo
+    git clone "${lgwrepo}" git-repo
+else
+    (cd git-repo && git remote set-url origin "${lgwrepo}")
 fi
 
 if [[ -z "${platform}" ]] || [[ -z "${variant}" ]]; then
@@ -41,13 +47,24 @@ if [[ -z "${platform}" ]] || [[ -z "${variant}" ]]; then
     exit 1
 fi
 
-if [[ ! -d platform-${platform} ]]; then
-    (cd git-repo && git checkout tags/${lgwversion})
-    git clone -b ${lgwversion} git-repo platform-${platform}
+platform_dir="platform-${platform}"
+platform_stamp="${platform_dir}/.lgw-source"
+desired_source="repo=${lgwrepo};ref=${lgwref}"
 
-    cd platform-${platform}
+if [[ -d "${platform_dir}" ]] && [[ (! -f "${platform_stamp}") || "$(cat "${platform_stamp}")" != "${desired_source}" ]]; then
+    echo "Recreating ${platform_dir}: source/ref changed"
+    rm -rf "${platform_dir}"
+fi
+
+if [[ ! -d "${platform_dir}" ]]; then
+    (cd git-repo && git fetch --tags --quiet && git checkout "${lgwref}")
+    git clone git-repo "${platform_dir}"
+
+    cd "${platform_dir}"
+    git checkout "${lgwref}"
     if [ -f ../${lgwversion}-${platform}.patch ]; then
         echo "Applying ${lgwversion}-${platform}.patch ..."
         git apply ../${lgwversion}-${platform}.patch
     fi
+    echo "${desired_source}" > .lgw-source
 fi
