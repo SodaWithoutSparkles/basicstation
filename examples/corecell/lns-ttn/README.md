@@ -21,6 +21,8 @@ To connect to The Things Network, you should
 7. After registering, start the station with `./start-station.sh -l ./lns-ttn`. Expecxt it to not connect, but you should see `Station EUI` in the logs. Copy the EUI and paste it into the console's gateway EUI field. The EUI might be missing a leading zeros in each of the sections, so make sure to add those if necessary. For example, if the EUI is `ab:cd:ef:12`, then the zero-padded version would be `00 ab 00 cd 00 ef 00 12`.
 8. Stop the station and start it again. It should connect to TTN and you should see `connected to LNS` in the logs.
 
+<!-- TODO: Add connection guides to other platforms -->
+
 ## Troubleshooting
 
 ### Connection issues
